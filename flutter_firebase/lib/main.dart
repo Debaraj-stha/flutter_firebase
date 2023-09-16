@@ -1,8 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_firebase/pages/signinpage.dart';
 
 import 'pages/homepage.dart';
+import 'pages/roleBasedAuth.dart';
 
 void main() async {
 //  FlutterDownloader.initialize();
@@ -10,21 +14,58 @@ void main() async {
   await Firebase.initializeApp();
   FirebaseDatabase.instance.setLoggingEnabled(true);
 //  ZegoUikitSignalingPlugin.init();
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
+  FirebaseAuth auth = FirebaseAuth.instance;
+  bool isUserAlreadyLoggedIn() {
+    User? user = auth.currentUser;
+    return user != null;
+  }
+
+  Future<Widget> checkRole(BuildContext context) async {
+    if (isUserAlreadyLoggedIn()) {
+      final FirebaseAuth auth = FirebaseAuth.instance;
+      String userId = auth.currentUser!.uid;
+      final firestore = FirebaseFirestore.instance.collection('users');
+      QuerySnapshot snapshots = await firestore
+          .where(
+            'uid',
+            isEqualTo: userId,
+          )
+          .get();
+      if (snapshots.docs.isNotEmpty) {
+        DocumentSnapshot snapshot = snapshots.docs[0];
+        String role = snapshot['role'];
+        return role == 'user' ? const UserPage() : const AdminPage();
+      }
+    }
+    return const SignInPage();
+  }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(brightness: Brightness.dark),
-      themeMode: ThemeMode.dark,
-      darkTheme:ThemeData.dark(),
-      home: const MyHomePage(),
+    return FutureBuilder<Widget>(
+      future: checkRole(context),
+      builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator(); // Loading indicator.
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}'); // Handle errors.
+        } else {
+          return MaterialApp(
+            title: 'Flutter Demo',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(brightness: Brightness.dark),
+            themeMode: ThemeMode.dark,
+            darkTheme: ThemeData.dark(),
+            home: snapshot.data, // Display the widget.
+          );
+        }
+      },
     );
   }
 }

@@ -1,4 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_firebase/pages/loginPage.dart';
+import 'package:flutter_firebase/pages/roleBasedAuth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+import 'homepage.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -26,47 +33,160 @@ class _SignInPageState extends State<SignInPage> {
     super.dispose();
   }
 
+  FirebaseAuth auth = FirebaseAuth.instance;
+  FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+  String role = "user";
+  bool isLoading = false;
+  void navigateToLogin(BuildContext context) {
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => const LoginPage()));
+  }
+
+  void signupwithGoogle() async {
+    try {
+      GoogleSignInAccount? account = await GoogleSignIn().signIn();
+      GoogleSignInAuthentication? authentication =
+          await account?.authentication;
+      AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: authentication?.accessToken,
+        idToken: authentication?.idToken,
+      );
+      UserCredential userCredential =
+          await auth.signInWithCredential(credential).then((value) {
+        firebaseFirestore.collection('users').add({
+          "uid": value.user!.uid,
+          "name": account!.displayName,
+          "profile": account.photoUrl,
+          "role": 'user'
+        }).then((value) => debugPrint("User created"));
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const AdminPage()));
+        return value;
+      });
+      debugPrint("UserCredential$userCredential");
+    } on Exception catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  void signUp() async {
+    setState(() {
+      isLoading = true;
+    });
+    await auth
+        .createUserWithEmailAndPassword(
+            email: emailController.text, password: passwordController.text)
+        .then((value) {
+      firebaseFirestore.collection('users').add({
+        "uid": value.user!.uid,
+        "name": nameController.text,
+        "role": role
+      }).then((value) => debugPrint("User created"));
+      nameController.clear();
+      emailController.clear();
+      passwordController.clear();
+      namefocusNode.unfocus();
+      passwordfocusNode.unfocus();
+      emailfocusNode.unfocus();
+      setState(() {
+        isLoading = false;
+      });
+      role == "user"
+          ? Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const UserPage()))
+          : Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const AdminPage()));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Sign In'),
-        ),
-        body: ListView(
+        body: SafeArea(
+      child: Center(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           children: [
             generatetextField(emailController, "Email", emailfocusNode),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
             generatetextField(passwordController, "Password", passwordfocusNode,
                 isObsecured: true),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
             generatetextField(nameController, "Name", namefocusNode),
-            SizedBox(
+            Row(
+              children: [
+                Radio(
+                  value: "user",
+                  groupValue: role, // Use the role variable here
+                  onChanged: (value) {
+                    setState(() {
+                      role = value.toString(); // Convert value to String
+                    });
+                  },
+                ),
+                const Text("user"),
+                Radio(
+                  value: "admin",
+                  groupValue: role, // Use the role variable here
+                  onChanged: (value) {
+                    setState(() {
+                      role = value.toString(); // Convert value to String
+                    });
+                    debugPrint(role);
+                  },
+                ),
+                const Text("admin")
+              ],
+            ),
+            const SizedBox(
               height: 20,
             ),
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: Text("Sign Up"),
-              ),
-            )
+            ElevatedButton(
+              onPressed: () {
+                signUp();
+              },
+              child: isLoading
+                  ? const CircularProgressIndicator(
+                      color: Colors.white,
+                    )
+                  : const Text("Sign Up"),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            const Text(
+              "Already have an account?",
+              textAlign: TextAlign.center,
+            ),
+            TextButton(
+                onPressed: () {
+                  navigateToLogin(context);
+                },
+                child: const Text("Login")),
+            TextButton(
+                onPressed: () {
+                  signupwithGoogle();
+                },
+                child: const Text("Sign up with Google"))
           ],
-        ));
+        ),
+      ),
+    ));
   }
 
   Widget generatetextField(
       TextEditingController controller, String label, FocusNode focusNode,
       {bool isObsecured = false}) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      margin: const EdgeInsets.symmetric(vertical: 10),
       child: Card(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(5),
-            side: BorderSide(width: 1, color: Colors.blue)),
+            side: const BorderSide(width: 1, color: Colors.blue)),
         child: TextFormField(
           obscureText: isObsecured,
           focusNode: focusNode,
@@ -74,7 +194,8 @@ class _SignInPageState extends State<SignInPage> {
           decoration: InputDecoration(
               border: InputBorder.none,
               hintText: label,
-              contentPadding: EdgeInsets.symmetric(horizontal: 5, vertical: 7)),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 5, vertical: 7)),
         ),
       ),
     );
