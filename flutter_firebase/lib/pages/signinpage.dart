@@ -81,7 +81,18 @@ class _SignInPageState extends State<SignInPage> {
         "uid": value.user!.uid,
         "name": nameController.text,
         "role": role
-      }).then((value) => debugPrint("User created"));
+      }).then((value) {
+        auth.currentUser!.sendEmailVerification();
+        if (auth.currentUser!.emailVerified) {
+          role == "user"
+              ? Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const UserPage()))
+              : Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const AdminPage()));
+        }
+
+        debugPrint("User created");
+      });
       nameController.clear();
       emailController.clear();
       passwordController.clear();
@@ -91,11 +102,6 @@ class _SignInPageState extends State<SignInPage> {
       setState(() {
         isLoading = false;
       });
-      role == "user"
-          ? Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const UserPage()))
-          : Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const AdminPage()));
     });
   }
 

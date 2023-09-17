@@ -3,8 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_firebase/pages/signinpage.dart';
 
+import 'package:flutter_firebase/pages/signinpage.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'pages/homepage.dart';
 import 'pages/roleBasedAuth.dart';
 
@@ -13,6 +14,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   FirebaseDatabase.instance.setLoggingEnabled(true);
+  await FlutterDownloader.initialize();
 //  ZegoUikitSignalingPlugin.init();
   runApp(MyApp());
 }
@@ -45,7 +47,7 @@ class MyApp extends StatelessWidget {
     return const SignInPage();
   }
 
-  // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Widget>(

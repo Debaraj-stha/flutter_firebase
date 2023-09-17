@@ -61,7 +61,8 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         isLoading = true;
       });
-      UserCredential userCredential = await auth.signInWithEmailAndPassword(
+      UserCredential userCredential = await auth
+          .signInWithEmailAndPassword(
         email: emailController.text,
         password: passwordController.text,
       );
@@ -69,12 +70,15 @@ class _LoginPageState extends State<LoginPage> {
       String uid = userCredential.user!.uid;
       CollectionReference reference = firebaseFirestore.collection("users");
       String role = "";
-      QuerySnapshot snapshot =
+      QuerySnapshot snapshots =
           await reference.where('uid', isEqualTo: uid).get();
-      for (DocumentSnapshot snapshot in snapshot.docs) {
+
+      if (snapshots.docs.isNotEmpty) {
+        DocumentSnapshot snapshot = snapshots.docs[0];
         role = snapshot['role'];
         setState(() {});
       }
+
       debugPrint("role: $role");
       role == 'user'
           ? Navigator.push(context,
