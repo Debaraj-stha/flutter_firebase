@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_firebase/pages/forgotPasswordPage.dart';
+import 'package:flutter_firebase/pages/loginWithPhone.dart';
 
 import 'package:flutter_firebase/pages/signinpage.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -41,7 +43,7 @@ class MyApp extends StatelessWidget {
       if (snapshots.docs.isNotEmpty) {
         DocumentSnapshot snapshot = snapshots.docs[0];
         String role = snapshot['role'];
-        return role == 'user' ? const UserPage() : const AdminPage();
+        return role == 'user' ? const MyHomePage() : const AdminPage();
       }
     }
     return const SignInPage();
@@ -64,10 +66,11 @@ class MyApp extends StatelessWidget {
             theme: ThemeData(brightness: Brightness.dark),
             themeMode: ThemeMode.dark,
             darkTheme: ThemeData.dark(),
-            home: snapshot.data, // Display the widget.
+            home:ForgotPasswordPage() //snapshot.data, // Display the widget.
           );
         }
       },
     );
+   
   }
 }

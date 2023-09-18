@@ -92,6 +92,8 @@ class _SignInPageState extends State<SignInPage> {
         }
 
         debugPrint("User created");
+      }).onError((error, stackTrace) {
+        debugPrint("error: $error");
       });
       nameController.clear();
       emailController.clear();
@@ -102,6 +104,8 @@ class _SignInPageState extends State<SignInPage> {
       setState(() {
         isLoading = false;
       });
+    }).onError((error, stackTrace) {
+      debugPrint("error: $error");
     });
   }
 

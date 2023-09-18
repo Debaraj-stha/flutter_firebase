@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_firebase/pages/forgotPasswordPage.dart';
 import 'package:flutter_firebase/pages/homepage.dart';
 import 'package:flutter_firebase/pages/roleBasedAuth.dart';
 import 'package:flutter_firebase/pages/signinpage.dart';
@@ -65,7 +66,10 @@ class _LoginPageState extends State<LoginPage> {
           .signInWithEmailAndPassword(
         email: emailController.text,
         password: passwordController.text,
-      );
+      )
+          .then((value) {
+        return value;
+      });
       debugPrint("UserCredential$userCredential");
       String uid = userCredential.user!.uid;
       CollectionReference reference = firebaseFirestore.collection("users");
@@ -102,11 +106,39 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: ListView(
         children: [
+          const SizedBox(
+            height: 30,
+          ),
+          const Center(
+            child: Text(
+              "Welcome back",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+            ),
+          ),
+          const SizedBox(
+            height: 30,
+          ),
           generatetextField(emailController, "Email", emailfocusNode),
           const SizedBox(
             height: 10,
           ),
           generatetextField(passwordController, "Pasword", passwordfocusNode),
+          InkWell(
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordPage()));
+              },
+              child: const Text(
+                "Forgot Password?",
+                textAlign: TextAlign.end,
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+              )),
+          const SizedBox(
+            height: 5,
+          ),
           ElevatedButton(
             onPressed: () {
               login();
